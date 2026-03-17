@@ -7,12 +7,12 @@ $password   = getenv("MYSQLPASSWORD");
 $dbname     = getenv("MYSQLDATABASE");
 $port       = getenv("MYSQLPORT");
 
-$conn = new mysqli($servername, $username, $password, $dbname, (int)$port);
-$conn->set_charset("utf8mb4");
+// $conn = new mysqli($servername, $username, $password, $dbname, (int)$port);
+// $conn->set_charset("utf8mb4");
 
-if ($conn->connect_error) {
-    die("DB fail: " . $conn->connect_error);
-}
+// if ($conn->connect_error) {
+//     die("DB fail: " . $conn->connect_error);
+// }
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 $conn->set_charset("utf8mb4");
