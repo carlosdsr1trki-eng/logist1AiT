@@ -4,19 +4,29 @@ header("Access-Control-Allow-Origin: *");
 
 require_once __DIR__ . "/db.php";
 
-$auto_id = $_GET["auto_id"] ?? null;
+$traker_id = $_GET["traker_id"] ?? null;
 
-if (!$auto_id) {
+if (!$traker_id) {
     http_response_code(400);
-    echo json_encode(["status" => "error", "msg" => "Falta auto_id"]);
+    echo json_encode(["status" => "error", "msg" => "Falta traker_id"]);
     exit;
 }
 
 try {
     $pdo  = db_conn_pdo();
-    $stmt = $pdo->prepare("SELECT imagen_cloud FROM autos WHERE id_unidad = ?");
-    $stmt->execute([$auto_id]);
-    $row  = $stmt->fetch();
+
+    // Busca el auto_id desde rutas usando traker_id
+    // luego trae imagen_cloud de autos
+    $stmt = $pdo->prepare("
+        SELECT a.imagen_cloud 
+        FROM rutas r
+        JOIN autos a ON a.id_unidad = r.auto_id
+        WHERE r.traker_id = ?
+        AND r.auto_id IS NOT NULL
+        LIMIT 1
+    ");
+    $stmt->execute([$traker_id]);
+    $row = $stmt->fetch();
 
     if (!$row || empty($row["imagen_cloud"])) {
         echo json_encode(["status" => "error", "msg" => "Sin imagen"]);
@@ -24,8 +34,8 @@ try {
     }
 
     echo json_encode([
-        "status"    => "success",
-        "foto_url"  => $row["imagen_cloud"]
+        "status"   => "success",
+        "foto_url" => $row["imagen_cloud"]
     ]);
 
 } catch (Throwable $e) {
