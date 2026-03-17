@@ -5,21 +5,14 @@ $servername = getenv("MYSQLHOST");
 $username   = getenv("MYSQLUSER");
 $password   = getenv("MYSQLPASSWORD");
 $dbname     = getenv("MYSQLDATABASE");
-$port       = getenv("MYSQLPORT");
+$port       = (int)(getenv("MYSQLPORT") ?: 3306);
 
-// $conn = new mysqli($servername, $username, $password, $dbname, (int)$port);
-// $conn->set_charset("utf8mb4");
-
-// if ($conn->connect_error) {
-//     die("DB fail: " . $conn->connect_error);
-// }
-
-$conn = new mysqli($servername, $username, $password, $dbname);
+$conn = new mysqli($servername, $username, $password, $dbname, $port);
 $conn->set_charset("utf8mb4");
 
 if ($conn->connect_error) {
     http_response_code(500);
-    echo json_encode(["status" => "error", "msg" => "Error en la conexión a la BD"]);
+    echo json_encode(["status" => "error", "msg" => "DB fail"]);
     exit;
 }
 
