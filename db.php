@@ -7,7 +7,7 @@ function db_conn(): mysqli {
   $user = getenv("MYSQLUSER");
   $pass = getenv("MYSQLPASSWORD");
   $name = getenv("MYSQLDATABASE");
-  $port = (int)(getenv("MYSQLPORT") ?: 3306);
+  $port = (int)(getenv("MYSQLPORT") ?: 33598);
 
   if (!$host || !$user || !$name) {
     http_response_code(500);
