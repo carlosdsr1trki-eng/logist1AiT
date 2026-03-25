@@ -3,7 +3,7 @@ header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/db.php';
 
 try {
-    $pdo = db_conn_pdo();
+    $conexion = db_conn();
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode(['ok' => false, 'msg' => 'DB fail', 'error' => $e->getMessage()]);
@@ -18,23 +18,20 @@ if ($id_ruta === '' || $traker_id === '') {
     exit;
 }
 
-try {
-    $stmt = $pdo->prepare("
-        UPDATE rutas 
-        SET STAT_RUT = 'F' 
-        WHERE id_ruta = :id_ruta 
-        AND traker_id = :traker_id
-    ");
-    $stmt->execute([
-        ':id_ruta'   => $id_ruta,
-        ':traker_id' => $traker_id
-    ]);
+$stmt = $conexion->prepare("
+    UPDATE rutas 
+    SET STAT_RUT = 'F' 
+    WHERE id_ruta = ? 
+    AND traker_id = ?
+");
+$stmt->bind_param("is", $id_ruta, $traker_id);
+$stmt->execute();
 
-    if ($stmt->rowCount() > 0) {
-        echo json_encode(['ok' => true, 'msg' => 'Ruta finalizada']);
-    } else {
-        echo json_encode(['ok' => false, 'msg' => 'Sin cambios, verifica id_ruta y traker_id']);
-    }
-} catch (PDOException $e) {
-    echo json_encode(['ok' => false, 'msg' => 'Error: ' . $e->getMessage()]);
+if ($stmt->affected_rows > 0) {
+    echo json_encode(['ok' => true, 'msg' => 'Ruta finalizada']);
+} else {
+    echo json_encode(['ok' => false, 'msg' => 'Sin cambios, verifica id_ruta y traker_id']);
 }
+
+$stmt->close();
+$conexion->close();
