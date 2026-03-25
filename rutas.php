@@ -56,7 +56,7 @@ $sql = "
         telefono_clie,
         caja
     FROM rutas
-    WHERE traker_id = ?
+    WHERE traker_id = ? AND STAT_RUT = 'N'
     ORDER BY id_ruta ASC, orden ASC
 ";
 
