@@ -29,28 +29,43 @@ if (!$id_ruta || $km_inicio === null || $km_inicio === "") {
 }
 
 try {
-    $stmt = $conn->prepare("
-        UPDATE kilometraje
-        SET km_inicio = ?
-        WHERE id_ruta = ?
-    ");
+    // revisa si ya existe
+    $check = $conn->prepare("SELECT id FROM kilometros WHERE id_ruta = ? LIMIT 1");
+    $check->bind_param("i", $id_ruta);
+    $check->execute();
+    $res = $check->get_result();
+    $row = $res->fetch_assoc();
+    $check->close();
 
-    $stmt->bind_param("di", $km_inicio, $id_ruta);
-    $stmt->execute();
+    if ($row) {
+        $stmt = $conn->prepare("
+            UPDATE kilometros
+            SET km_inicio = ?
+            WHERE id_ruta = ?
+        ");
+        $stmt->bind_param("di", $km_inicio, $id_ruta);
+        $stmt->execute();
+        $stmt->close();
 
-    if ($stmt->affected_rows > 0) {
+        echo json_encode([
+            "status" => "ok",
+            "msg" => "Kilometraje actualizado"
+        ]);
+    } else {
+        $stmt = $conn->prepare("
+            INSERT INTO kilometros (id_ruta, km_inicio, created_at)
+            VALUES (?, ?, NOW())
+        ");
+        $stmt->bind_param("id", $id_ruta, $km_inicio);
+        $stmt->execute();
+        $stmt->close();
+
         echo json_encode([
             "status" => "ok",
             "msg" => "Kilometraje guardado"
         ]);
-    } else {
-        echo json_encode([
-            "status" => "error",
-            "msg" => "No se encontró registro en kilometros para esa ruta"
-        ]);
     }
 
-    $stmt->close();
     $conn->close();
 
 } catch (Throwable $e) {
