@@ -30,7 +30,7 @@ if (!$id_ruta || $km_inicio === null || $km_inicio === "") {
 
 try {
     $stmt = $conn->prepare("
-        UPDATE kilometros
+        UPDATE kilometraje
         SET km_inicio = ?
         WHERE id_ruta = ?
     ");
