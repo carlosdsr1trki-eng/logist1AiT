@@ -84,20 +84,35 @@ if (!isset($cloudinary["secure_url"])) {
 $foto_url = $cloudinary["secure_url"];
 
 // ─── Guardar en BD ─────────────────────────────────────────────────────────
-$stmt = $conn->prepare(
-    "INSERT INTO gasolina_evidencias (id_ruta, id_unidad, foto_fin_url, formFinal)
-     VALUES (?, ?, ?, ?)
-     ON DUPLICATE KEY UPDATE
-        foto_fin_url = VALUES(foto_fin_url),
-        formFinal    = VALUES(formFinal)"
-);
+// 1. ¿Ya existe una fila para este id_ruta?
+$check = $conn->prepare("SELECT id FROM gasolina_evidencias WHERE id_ruta = ? LIMIT 1");
+$check->bind_param("i", $id_ruta);
+$check->execute();
+$check->store_result();
+$existe = $check->num_rows > 0;
+$check->close();
 
-$stmt->bind_param("iiss", $id_ruta, $id_unidad, $foto_url, $estado_tanque);
+if ($existe) {
+    // UPDATE
+    $stmt = $conn->prepare(
+        "UPDATE gasolina_evidencias
+         SET foto_fin_url = ?, formFinal = ?
+         WHERE id_ruta = ?"
+    );
+    $stmt->bind_param("ssi", $foto_url, $estado_tanque, $id_ruta);
+} else {
+    // INSERT (primera vez)
+    $stmt = $conn->prepare(
+        "INSERT INTO gasolina_evidencias (id_ruta, id_unidad, foto_fin_url, formFinal)
+         VALUES (?, ?, ?, ?)"
+    );
+    $stmt->bind_param("iiss", $id_ruta, $id_unidad, $foto_url, $estado_tanque);
+}
 
 if ($stmt->execute()) {
     echo json_encode([
         "status"        => "success",
-        "msg"           => "Foto de gasolina final guardada",
+        "msg"           => $existe ? "Registro actualizado" : "Registro creado",
         "foto_url"      => $foto_url,
         "estado_tanque" => $estado_tanque
     ]);
