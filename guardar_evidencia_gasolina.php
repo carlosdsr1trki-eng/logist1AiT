@@ -20,8 +20,9 @@ try {
 // ─── Parámetros requeridos ─────────────────────────────────────────────────
 $id_ruta       = $_POST["id_ruta"]       ?? null;
 $id_unidad     = $_POST["id_unidad"]     ?? null;
-$tipo          = $_POST["tipo"]          ?? null; // "inicio" o "fin"
-$estado_tanque = $_POST["estado_tanque"] ?? null; // "Lleno", "3/4", "Medio", "1/4", "Reserva"
+$tipo          = $_POST["tipo"]          ?? null;
+$estado_tanque = $_POST["estado_tanque"] ?? null;
+$gas_rut       = $_POST["gas_rut"]       ?? null; // ← nuevo
 
 if (!$id_ruta || !$id_unidad || !$tipo) {
     http_response_code(400);
@@ -91,18 +92,26 @@ if (!isset($cloudinary["secure_url"])) {
 $foto_url = $cloudinary["secure_url"];
 
 // ─── Guardar en BD ─────────────────────────────────────────────────────────
-$col_foto = $tipo === "inicio" ? "foto_inicio_url" : "foto_fin_url";
-$col_form = $tipo === "inicio" ? "formInicio"      : "formFinal";
-
-$stmt = $conn->prepare(
-    "INSERT INTO gasolina_evidencias (id_ruta, id_unidad, $col_foto, $col_form)
-     VALUES (?, ?, ?, ?)
-     ON DUPLICATE KEY UPDATE
-        $col_foto = VALUES($col_foto),
-        $col_form = VALUES($col_form)"
-);
-
-$stmt->bind_param("iiss", $id_ruta, $id_unidad, $foto_url, $estado_tanque);  // ← solo este
+if ($tipo === "inicio") {
+    $stmt = $conn->prepare(
+        "INSERT INTO gasolina_evidencias (id_ruta, id_unidad, foto_inicio_url, formInicio)
+         VALUES (?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            foto_inicio_url = VALUES(foto_inicio_url),
+            formInicio      = VALUES(formInicio)"
+    );
+    $stmt->bind_param("iiss", $id_ruta, $id_unidad, $foto_url, $estado_tanque);
+} else {
+    $stmt = $conn->prepare(
+        "INSERT INTO gasolina_evidencias (id_ruta, id_unidad, foto_fin_url, formFinal, gas_rut)
+         VALUES (?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            foto_fin_url = VALUES(foto_fin_url),
+            formFinal    = VALUES(formFinal),
+            gas_rut      = VALUES(gas_rut)"
+    );
+    $stmt->bind_param("iisss", $id_ruta, $id_unidad, $foto_url, $estado_tanque, $gas_rut);
+}
 
 if ($stmt->execute()) {
     echo json_encode([
@@ -110,7 +119,8 @@ if ($stmt->execute()) {
         "msg"           => "Foto de gasolina ($tipo) guardada",
         "foto_url"      => $foto_url,
         "tipo"          => $tipo,
-        "estado_tanque" => $estado_tanque
+        "estado_tanque" => $estado_tanque,
+        "gas_rut"       => $gas_rut
     ]);
 } else {
     http_response_code(500);
