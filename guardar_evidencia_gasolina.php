@@ -18,9 +18,10 @@ try {
 }
 
 // ─── Parámetros requeridos ─────────────────────────────────────────────────
-$id_ruta   = $_POST["id_ruta"]   ?? null;
-$id_unidad = $_POST["id_unidad"] ?? null;
-$tipo      = $_POST["tipo"]      ?? null; // "inicio" o "fin"
+$id_ruta       = $_POST["id_ruta"]       ?? null;
+$id_unidad     = $_POST["id_unidad"]     ?? null;
+$tipo          = $_POST["tipo"]          ?? null; // "inicio" o "fin"
+$estado_tanque = $_POST["estado_tanque"] ?? null; // "Lleno", "3/4", "Medio", "1/4", "Reserva"
 
 if (!$id_ruta || !$id_unidad || !$tipo) {
     http_response_code(400);
@@ -90,15 +91,18 @@ if (!isset($cloudinary["secure_url"])) {
 $foto_url = $cloudinary["secure_url"];
 
 // ─── Guardar en BD ─────────────────────────────────────────────────────────
-// Columna dinámica según tipo: foto_inicio_url o foto_fin_url
-$columna = $tipo === "inicio" ? "foto_inicio_url" : "foto_fin_url";
+$col_foto  = $tipo === "inicio" ? "foto_inicio_url" : "foto_fin_url";
+$col_form  = $tipo === "inicio" ? "formInicio"      : "formFinal";
 
 $stmt = $conn->prepare(
-    "INSERT INTO gasolina_evidencias (id_ruta, id_unidad, $columna)
-     VALUES (?, ?, ?)
+    "INSERT INTO gasolina_evidencias (id_ruta, id_unidad, $col_foto, $col_form)
+     VALUES (?, ?, ?, ?)
      ON DUPLICATE KEY UPDATE
-        $columna = VALUES($columna)"
+        $col_foto = VALUES($col_foto),
+        $col_form = VALUES($col_form)"
 );
+
+$stmt->bind_param("iiss", $id_ruta, $id_unidad, $foto_url, $estado_tanque);
 
 $stmt->bind_param("iis", $id_ruta, $id_unidad, $foto_url);
 
