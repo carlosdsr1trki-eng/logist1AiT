@@ -86,7 +86,7 @@ $foto_url = $cloudinary["secure_url"];
 
 // ─── Guardar en BD ─────────────────────────────────────────
 $stmt = $conn->prepare(
-    "INSERT INTO evidencias_pedidos (id_ruta, cve_pedido, foto_url, comentario, created_at)
+    "INSERT INTO evidencia_pedido (id_ruta, cve_pedido, foto_url, comentario, created_at)
      VALUES (?, ?, ?, ?, NOW())
      ON DUPLICATE KEY UPDATE
         foto_url   = VALUES(foto_url),
