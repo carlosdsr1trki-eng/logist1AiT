@@ -20,10 +20,10 @@ if (!$correo) {
 }
 
 try {
-    $resend = Resend::client($_ENV['RESEND_API_KEY']);
+    $resend = Resend::client($_ENV['re_gbrXXgr8_8bpr28FFE7DmTobogUz1WptL']);
 
     $result = $resend->emails->send([
-        'from' => 'TRKI <onboarding@resend.dev>', // 🔥 temporal
+        'from' => 'TRKI <onboarding@resend.dev>',
         'to' => [$correo],
         'subject' => 'Pedido próximo a llegar',
         'html' => "
@@ -37,10 +37,12 @@ try {
 
     echo json_encode([
         "status" => "ok",
-        "msg" => "Correo enviado"
+        "msg" => "Correo enviado",
+        "data" => $result
     ]);
 
-} catch (Exception $e) {
+} catch (\Throwable $e) {
+    http_response_code(500);
     echo json_encode([
         "status" => "error",
         "msg" => $e->getMessage()
