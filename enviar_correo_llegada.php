@@ -1,7 +1,6 @@
 <?php
 
 require __DIR__ . '/vendor/autoload.php';
-use Resend;
 
 header("Content-Type: application/json; charset=utf-8");
 header("Access-Control-Allow-Origin: *");
@@ -18,8 +17,19 @@ if (!$correo) {
     exit;
 }
 
+$apiKey = getenv('re_gbrXXgr8_8bpr28FFE7DmTobogUz1WptL');
+
+if (!$apiKey) {
+    http_response_code(500);
+    echo json_encode([
+        "status" => "error",
+        "msg" => "No se encontró RESEND_API_KEY en Railway"
+    ]);
+    exit;
+}
+
 try {
-    $resend = Resend::client($_ENV['re_gbrXXgr8_8bpr28FFE7DmTobogUz1WptL']);
+    $resend = Resend::client($apiKey);
 
     $result = $resend->emails->send([
         'from' => 'TRKI <onboarding@resend.dev>',
